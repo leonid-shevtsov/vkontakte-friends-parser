@@ -3,8 +3,13 @@ require 'mechanize'
 require 'json'
 require 'haml'
 
-MY_EMAIL = ''
-MY_PASSWORD = ''
+#MY_EMAIL = ''
+#MY_PASSWORD = ''
+
+unless defined?(MY_EMAIL)
+  puts 'Look at the source and fill in your credentials'
+  exit
+end
 
 def get_friends_list_from_page page_body
   friends_json_match = page_body.match(/^\s+var friendsData = (\{.+\});$/)
@@ -53,9 +58,15 @@ people = {}
 
 my_friends_list = get_friends_list_from_page agent.get('http://vkontakte.ru/friends.php').body
 
+if my_friends_list == {}
+  puts 'Can\'t get your friends list; probably the credentials are all wrong'
+  exit
+end
+
 my_friends_list['friends'].each do |friend|
-  my_friends << friend[0]
-  names[friend[0]] = friend[1]
+  friend_id = friend[0].to_s.strip.to_i
+  my_friends << friend_id
+  names[friend_id] = friend[1].strip
 end
 
 left = my_friends.length
@@ -70,12 +81,18 @@ my_friends.each do |friend_id, friend_name|
 
   his_friends_list['friends'].each do |his_friend|
     #mark his friend
-    names[his_friend[0]] = his_friend[1]
-    people[his_friend[0]] ||= []
-    people[his_friend[0]] << friend_id
+    his_friend_id = his_friend[0].to_s.strip.to_i
+    names[his_friend_id] = his_friend[1].strip
+    people[his_friend_id] ||= []
+    people[his_friend_id] << friend_id
   end
 end
+
+my_id = my_friends_list['id']
+my_friends << my_id # so I don't appear in the list of people
 
 people = people.reject{|id,friends| my_friends.include?(id) || (friends.length < 2)}.sort {|a,b| b[1].length <=> a[1].length}
 
 File.open('friends.html','w') { |f| f.write Haml::Engine.new(page_template).render(Object.new, :people => people, :names => names) }
+
+puts 'Look for your list in friends.html'
