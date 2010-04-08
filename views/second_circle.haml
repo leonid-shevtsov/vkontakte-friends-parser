@@ -1,0 +1,20 @@
+%h1 
+  ="Твой второй круг, #{@names[@my_id]}"
+%p="У #{@people.count} человеков больше трех общих с тобой знакомых, а они все еще не у тебя в друзьях."
+%p Не забудь сохранить эту страницу, она мне нелегко далась.
+-i=0
+-@people.each do |id,friends|
+  -i+=1
+  .row
+    .column.grid_2
+      -if i<200
+        %img{:src => @avatars[id]}
+        %br
+        %br
+    .column.grid_10
+      %div
+        %a{ :href=>"http://vkontakte.ru/id#{id}"}=@names[id]
+        ="(#{friends.length} общих)"
+      %div
+        =friends.map{|id| @names[id]}.join ', '
+      %br

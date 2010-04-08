@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'mechanize'
-require 'json'
+require 'yajl'
+require 'iconv'
 
 class VkontakteGrabber
   attr_reader :agent
@@ -29,11 +30,11 @@ private
    
     return {} if friends_json_match.nil?
 
-    friends_json = friends_json_match[1].gsub("'","\"").gsub(/(\d+):/,"\"$1\":").gsub(/[\x00-\x19]/," ")
+    friends_json = Iconv.conv('UTF-8//IGNORE//TRANSLIT', 'CP1251', friends_json_match[1]).gsub("'","\"").gsub(/\b(\d+):/,"\"\\1\":").gsub(/[\x00-\x19]/," ")
 
+    return Yajl::Parser.parse friends_json
     begin
-      JSON.parse friends_json
-    rescue JSON::ParserError
+    rescue Yajl::ParserError
       puts 'JSON parsing error. Offending line stored into parse_error.json'
       File.open('parse_error.json','w') {|f| f.write friends_json}
       {}

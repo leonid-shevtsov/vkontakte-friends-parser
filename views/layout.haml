@@ -1,0 +1,14 @@
+!!!
+%html
+  %head
+    %meta{'http-equiv' => 'Content-Type', :content => 'text/html; charset=utf8'}
+    %link{:rel => 'stylesheet', :href => 'sencss.css'}
+    %link{:rel => 'stylesheet', :href => 'grid.css'}
+    %title Второй круг Контакта
+  %body
+    :plain
+      <a href="http://github.com/leonid-shevtsov/vkontakte-friends-parser"><img style="position: absolute; top: 0; left: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub" /></a>
+    %br
+    .row
+      .column.grid_12
+        =yield
