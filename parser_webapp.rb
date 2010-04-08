@@ -117,13 +117,13 @@ get '/second_circle' do
     @redis_client["remaining_friends_#{@my_id}"] = @my_friends.length
     RunLater.run_now = true #TODO 
     run_later do
-      people={}
+      @people={}
       @my_friends.each do |friend_id|
         his_friends = get_users_friends(friend_id)
         if his_friends
           his_friends.each do |his_friend_id|
-            people[his_friend_id] ||= []
-            people[his_friend_id] << friend_id
+            @people[his_friend_id] ||= []
+            @people[his_friend_id] << friend_id
           end
         end
         @redis_client.decr "remaining_friends_#{@my_id}"
@@ -131,9 +131,9 @@ get '/second_circle' do
 
       @my_friends << @my_id # so i don't show up in 2nd circle
 
-      people = people.reject{|id,friends| @my_friends.include?(id) || (friends.length < 4)}.sort {|a,b| b[1].length <=> a[1].length}
+      @people = @people.reject{|id,friends| @my_friends.include?(id) || (friends.length < 4)}.sort {|a,b| b[1].length <=> a[1].length}
 
-      @redis_client["second_circle_#{@my_id}"] = Yajl::Encoder.encode(people)
+      @redis_client["second_circle_#{@my_id}"] = Yajl::Encoder.encode(@people)
       @redis_client.expire "second_circle_#{@my_id}", 1.day
     end
     #"Обработка запущена. Твои друзья обработаются ориентировочно за #{@my_friends.length} секунд. Потом обнови эту страницу."
