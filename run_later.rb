@@ -81,15 +81,18 @@ module RunLater
     end
     
     def process_queue
+      self.logger ||= Logger.new('worker.log')
       begin
         while block = RunLater.queue.pop
           Thread.pass
           Thread.current[:running] = true
+          puts 'calling block...'
           block.call
           Thread.current[:running] = false
           logger.flush
         end
       rescue Exception => e
+        puts e.inspect
         logger.error("Worker thread crashed, retrying. Error was: #{e}")
         logger.flush
         Thread.current[:running] = false
