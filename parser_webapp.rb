@@ -78,7 +78,7 @@ helpers do
     user_id = user_id.to_i
 
     if Time.at(@redis_client.get("friends_updated_at_#{user_id}").to_i) < 1.day.ago
-      @redis_client.multi do
+      @redis_client.pipelined do
         friend_ids = get_friends_for(user_id)
         write_friends_to_db(user_id, friend_ids)
       end
