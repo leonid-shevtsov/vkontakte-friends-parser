@@ -3,28 +3,14 @@ require 'mechanize'
 require 'json'
 require 'haml'
 
+require 'vkontakte_grabber.rb'
+require 'config.rb'
 #MY_EMAIL = ''
 #MY_PASSWORD = ''
 
 unless defined?(MY_EMAIL)
   puts 'Look at the source and fill in your credentials'
   exit
-end
-
-def get_friends_list_from_page page_body
-  friends_json_match = page_body.match(/^\s+var friendsData = (\{.+\});$/)
- 
-  return {} if friends_json_match.nil?
-
-  friends_json = friends_json_match[1].gsub("'","\"").gsub(/(\d+):/,"\"$1\":").gsub(/[\x00-\x19]/," ")
-
-  begin
-    JSON.parse friends_json
-  rescue JSON::ParserError
-    puts 'JSON parsing error. Offending line stored into parse_error.json'
-    File.open('parse_error.json','w') {|f| f.write friends_json}
-    {}
-  end
 end
 
 page_template = <<EOT
@@ -42,21 +28,13 @@ page_template = <<EOT
             =friends.map{|id| names[id]}.join ', '
 EOT
 
-
-agent = WWW::Mechanize.new
-page = agent.get('http://vkontakte.ru')
-login_form = page.form('login')
-login_form.email = MY_EMAIL
-login_form.pass = MY_PASSWORD
-
-#login & redirect
-agent.submit( agent.submit(login_form, login_form.buttons.first).forms.first ) 
+grabber = VkontakteGrabber.new(MY_EMAIL, MY_PASSWORD)
 
 names = {}
 my_friends = []
 people = {}
 
-my_friends_list = get_friends_list_from_page agent.get('http://vkontakte.ru/friends.php').body
+my_friends_list = grabber.get_friends
 
 if my_friends_list == {}
   puts 'Can\'t get your friends list; probably the credentials are all wrong'
@@ -71,13 +49,17 @@ end
 
 left = my_friends.length
 
-my_friends.each do |friend_id, friend_name|
+my_friends.each do |friend_id|
   puts left
   left -= 1
 
-  his_friends_list = get_friends_list_from_page agent.get("http://vkontakte.ru/friends.php?id=#{friend_id}").body
+  his_friends_list = grabber.get_friends(friend_id)
+  sleep 1 # to avoid vkontakte friend blocking
 
-  next if his_friends_list['friends'].nil? 
+  if his_friends_list['friends'].nil? 
+    puts names[friend_id]
+    next
+  end
 
   his_friends_list['friends'].each do |his_friend|
     #mark his friend

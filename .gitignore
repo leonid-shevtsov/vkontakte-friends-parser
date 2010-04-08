@@ -1,0 +1,4 @@
+config.rb
+mechanize.log
+*.txt
+*.html
