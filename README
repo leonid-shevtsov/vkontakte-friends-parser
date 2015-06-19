@@ -1,5 +1,0 @@
-Requirements: Mechanize, Haml (for output)
-
-Writes results to friends.html
-
-Don't forget to fill in your own credentials
